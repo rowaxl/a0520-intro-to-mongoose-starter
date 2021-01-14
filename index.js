@@ -1,5 +1,8 @@
 const express = require('express');
 const path = require('path');
+// const MongoClient = require('mongodb').MongoClient;
+
+const database = require('./util/database');
 
 //Model
 const members = require('./model/members.model');
@@ -22,4 +25,9 @@ app.get('/', (req, res) => {
 //members routes
 app.use('/api/members', memberRoute);
 
-app.listen(3000, () => console.log(`Server is running on port 3000`));
+
+database.mongoConnect(() => {
+    app.listen(3000, () => console.log(`Server is running on port 3000`));
+})
+
+
