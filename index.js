@@ -1,13 +1,11 @@
-const express = require('express');
-const path = require('path');
-// const MongoClient = require('mongodb').MongoClient;
+import express from 'express';
+import path from 'path';
+import { initialize } from './util/database';
 
-const database = require('./util/database');
-
-//Model
-const members = require('./model/members.model');
-//Routes
-const memberRoute = require('./routes/members.routes');
+// Controller
+import Members from './model/Members';
+// Routes
+import memberRoute from './routes/members.routes';
 
 const app = express();
 
@@ -18,16 +16,27 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 //home route
-app.get('/', (req, res) => {
-    res.render('index', { title: "Members List", members });
+app.get('/', async (req, res) => {
+    const members = await Members.find({})
+
+    console.log({ members })
+    
+    res.render('index', {title: 'Member Manager', members})
 });
 
 //members routes
 app.use('/api/members', memberRoute);
 
+app.listen(3000, async () => {
+    console.log(`Server is running on port 3000`)
+    const dbInstance = await initialize()
 
-database.mongoConnect(() => {
-    app.listen(3000, () => console.log(`Server is running on port 3000`));
-})
+    if (!dbInstance) {
+        console.error('Failed to initialize MongoDB')
+        return process.exit(1)
+    }
+
+    console.log('MongoDB Ready')
+});
 
 

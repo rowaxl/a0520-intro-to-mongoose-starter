@@ -1,25 +1,12 @@
-const MongoClient = require('mongodb').MongoClient;
+import mongoose from 'mongoose'
 
-let db;
-//url
-const URL = 'mongodb://127.0.0.1:27017/'
-//dbname
-const dbName = 'myproject';
+const URL = 'mongodb://127.0.0.1:27017/member_manager'
 
-exports.mongoConnect = (callback) => {
-    MongoClient.connect(URL)
-    .then(client => {
-        console.log('Connected Successfully to Server');
-        db = client.db(dbName);
-        callback();
-    })
-    .catch(err => console.log("Error in mongoConnect: ", err))
-}
+let instance = null
 
-exports.getDB = () => {
-    if(db){
-        return db;
-    }else{
-        throw err;
-    }
+export const initialize = async () => {
+    if (!instance)
+        instance = await mongoose.connect(URL, { useNewUrlParser: true, useUnifiedTopology: true })
+
+    return instance
 }
