@@ -10,3 +10,24 @@ export const initialize = async () => {
 
     return instance
 }
+
+export const DBError = err => {
+    const DBError = new Error('DB Error ' + err.message)
+    DBError.status = 500
+
+    throw DBError
+}
+
+export const toObjectId = string => {
+    let result
+    try {
+        result = mongoose.Types.ObjectId(string)
+    } catch (error) {
+        const paramError = new Error('Invalid ObjectId')
+        paramError.status = 403
+
+        throw paramError
+    }
+
+    return result
+}

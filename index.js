@@ -1,4 +1,5 @@
-import express from 'express';
+import express from 'express'
+import 'express-async-errors'
 import path from 'path';
 import { initialize } from './util/database';
 
@@ -26,6 +27,17 @@ app.get('/', async (req, res) => {
 
 //members routes
 app.use('/api/members', memberRoute);
+
+// common error handler
+app.use((error, req, res, next) => {
+    if (error.status) {
+        res.status(error.status)
+        res.json({ error: error.message })
+        return
+    }
+
+    next(error)
+})
 
 app.listen(3000, async () => {
     console.log(`Server is running on port 3000`)
