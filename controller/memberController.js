@@ -1,25 +1,26 @@
 import mongoose from 'mongoose'
 import Members from '../model/Members'
+import { toObjectId, DBError } from '../util/database'
 
 export const getAllMember = async (req, res) => {
-    const members = await Members.find({}).catch(err => {
-        console.error('DB Error ', err)
-    })
+    const members = await Members.find({}).catch(DBError)
 
     res.json({members})
 }
 
 export const getOneMember = async (req, res) => {
-    const member = await Members.find({ id: mongoose.Types.ObjectId(req.params.id) }).catch(err => {
-        console.error('DB Error ', err)
-    })
+    const objectId = toObjectId(req.params.id)
 
-    if (!member) {
-        res.status(404).json({ msg: `No member with the id of ${req.params.id} found` })
-        return
+    const result = await Members.findOne({ _id: objectId }).catch(DBError)
+
+    if (!result) {
+        const APIError = new Error('Failed to find member')
+        APIError.status = 404
+
+        throw APIError
     }
 
-    res.json(member)
+    res.json({ result })
 }
 
 export const createMember = async (req, res) => {
@@ -28,43 +29,64 @@ export const createMember = async (req, res) => {
         status: 'active'
     })
 
-    const result = await newMember.save({ validateBeforeSave: true }).catch(err => {
-        console.error('DB Error ', err)
-    })
+    const result = await newMember.save({ validateBeforeSave: true }).catch(DBError)
 
     if (!result) {
-        res.status(500).json({ msg: 'Failed to create member' })
-        return
+        const APIError = new Error('Failed to create member')
+        APIError.status = 403
+
+        throw APIError
     }
 
     res.status(200).json({ result })
 }
 
 export const updateMember = async (req, res) => {
-    const result = await Members.updateOne(
-        { _id: mongoose.Types.ObjectId(req.params.id) },
-        { ...req.body }
-    ).catch(err => {
-        console.error('DB Error ', err)
-    })
+    const objectId = toObjectId(req.params.id)
 
+    const target = await Members.findOne({ _id: objectId })
+
+    if (!target) {
+        const APIError = new Error('Cannot found the member')
+        APIError.status = 404
+
+        throw APIError
+    }
+
+    const result = await Members.updateOne(
+        { _id: objectId },
+        { ...req.body }
+    ).catch(DBError)
 
     if (!result) {
-        res.status(500).json({ msg: 'Failed to update member' })
-        return
+        const APIError = new Error('Failed to update member')
+        APIError.status = 403
+
+        throw APIError
     }
 
     res.status(200).json({ result })
 }
 
 export const deleteMember = async (req, res) => {
-    const result = await Members.deleteOne({ _id: mongoose.Types.ObjectId(req.params.id) }).catch(err => {
-        console.error('DB Error ', err)
-    })
+    const objectId = toObjectId(req.params.id)
+
+    const target = await Members.findOne({ _id: objectId })
+
+    if (!target) {
+        const APIError = new Error('Cannot found the member')
+        APIError.status = 404
+
+        throw APIError
+    }
+
+    const result = await Members.deleteOne({ _id: objectId }).catch(DBError)
 
     if (!result) {
-        res.status(500).json({ msg: 'Failed to delete member' })
-        return
+        const APIError = new Error('Failed to delete member')
+        APIError.status = 403
+
+        throw APIError
     }
 
     res.status(200).json({ result })
